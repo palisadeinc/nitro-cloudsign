@@ -1,0 +1,163 @@
+name: Nitro Cloudsign CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  release:
+    types: [created] # Trigger on release creation
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.2' # Adjust Go version if needed
+          cache: false # golangci-lint-action handles caching
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
+          version: latest
+          # Optional: working directory, useful for monorepos
+          # working-directory: somedir
+
+          # Optional: golangci-lint command line arguments.
+          # args: --issues-exit-code=0
+
+          # Optional: show only new issues if it's a pull request. The default value is `false`.
+          # only-new-issues: true
+
+          # Optional: if set to true then the action won't cache or restore ~/.cache/go-build.
+          # skip-go-installation: true
+
+          # Optional: if set to true then the action won't cache or restore ~/.cache/golangci-lint.
+          # skip-pkg-cache: true
+
+          # Optional: if set to true then the action won't cache or restore ~/.cache/go-build.
+          # skip-build-cache: true
+
+      - name: Run go vet # go vet is still useful for checks not covered by golangci-lint
+        run: go vet ./...
+
+  test:
+    name: Test
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.2' # Adjust Go version if needed
+          cache: true
+      - name: Run tests
+        run: go test -race -vet=off ./... # -vet=off because vet runs in the lint job 
+
+  vulnerability-check:
+    name: Vulnerability Check
+    runs-on: ubuntu-22.04
+    needs: [lint, test] # Ensure lint and test jobs pass first
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.2' # Adjust Go version if needed
+          cache: true
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
+      - name: Run govulncheck
+        run: govulncheck ./... 
+
+  build:
+    name: Build Binaries (${{ matrix.goos }}/${{ matrix.goarch }})
+    runs-on: ubuntu-22.04
+    needs: [lint, test, vulnerability-check]
+    # Only run on push to main or on release creation
+    if: (github.event_name == 'push' && (github.ref == 'refs/heads/main') || (github.event_name == 'release'))
+    strategy:
+      matrix:
+        goos: [linux]
+        goarch: [amd64]
+        # Optional: exclude specific combinations if needed
+        # exclude:
+        #   - goos: windows
+        #     goarch: arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.2' # Adjust Go version if needed
+          cache: true
+
+      - name: Determine Version
+        id: version
+        # Run this only once, maybe better outside matrix or use outputs?
+        # Let's run it in each job for simplicity, it's idempotent.
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            # Use tag name for releases (e.g., v1.0.0)
+            echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+          else
+            # Use short commit hash for main branch pushes
+            echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          fi
+          echo "Determined version: ${{ env.VERSION }}"
+
+      - name: Build Binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          BINARY_NAME="recovery-${GOOS}-${GOARCH}-${{ env.VERSION }}"
+          if [ "$GOOS" = "windows" ]; then
+            BINARY_NAME+=".exe"
+          fi
+          echo "Building $BINARY_NAME ..."
+          mkdir -p dist # Create dist directory if it doesn't exist
+          # Assumes main package is in ./cmd/recovery and has a main.Version variable
+          # Adjust path and ldflags variable name if necessary
+          CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X 'main.Version=${{ env.VERSION }}'" -o "dist/${BINARY_NAME}" ./main.go
+          echo "BINARY_PATH=dist/${BINARY_NAME}" >> $GITHUB_ENV # Pass path to next step
+          echo "BINARY_NAME=${BINARY_NAME}" >> $GITHUB_ENV # Pass name to next step
+
+          # Generate SHA256 Checksum
+          CHECKSUM_NAME="${BINARY_NAME}.sha256"
+          CHECKSUM_PATH="dist/${CHECKSUM_NAME}"
+          echo "Generating checksum ${CHECKSUM_NAME} ..."
+          # Use command based on TARGET OS ($GOOS), running on Linux runner
+          if [ "$GOOS" = "darwin" ]; then
+            # macOS uses shasum
+            shasum -a 256 "dist/${BINARY_NAME}" > "${CHECKSUM_PATH}"
+          else
+            # Linux and Windows targets can use sha256sum on the Linux runner
+            sha256sum "dist/${BINARY_NAME}" > "${CHECKSUM_PATH}"
+          fi
+          # Optional: Adjust output format if needed (e.g., remove filename from sha256sum output)
+          # Example: sha256sum "dist/${BINARY_NAME}" | cut -d' ' -f1 > "${CHECKSUM_PATH}"
+          echo "CHECKSUM_PATH=${CHECKSUM_PATH}" >> $GITHUB_ENV
+          echo "CHECKSUM_NAME=${CHECKSUM_NAME}" >> $GITHUB_ENV
+
+      - name: Upload Binary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: recovery-${{ matrix.goos }}-${{ matrix.goarch }}-${{ env.VERSION }} # Unique artifact name per build
+          path: |
+            ${{ env.BINARY_PATH }}
+            ${{ env.CHECKSUM_PATH }} # Also include checksum in the workflow artifact
+          if-no-files-found: error # Fail if the binary wasn't created
+
+      - name: Upload Binary Release Asset
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.BINARY_PATH }}
+          asset_name: ${{ env.BINARY_NAME }}
+          asset_content_type: application/octet-stream

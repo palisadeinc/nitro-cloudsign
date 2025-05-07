@@ -1,0 +1,15 @@
+[Unit]
+Description=Tacos: socat in reverse. Tun to Vsock bidirectionnal tunnel. This unit launches tacos as a server, for the host of the nitro enclave.
+After=network-online.target
+DefaultDependencies=no
+
+[Service]
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tacos
+ExecStart=/bin/bash -ce "RUST_LOG=info exec /usr/bin/tacos server -p 8080 9080"
+Restart=always
+TimeoutSec=0
+
+[Install]
+WantedBy=multi-user.target
