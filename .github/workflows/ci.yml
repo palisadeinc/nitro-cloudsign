@@ -113,13 +113,12 @@ jobs:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
         run: |
-          BINARY_NAME="recovery-${GOOS}-${GOARCH}-${{ env.VERSION }}"
+          BINARY_NAME="servitor-${GOOS}-${GOARCH}-${{ env.VERSION }}"
           if [ "$GOOS" = "windows" ]; then
             BINARY_NAME+=".exe"
           fi
           echo "Building $BINARY_NAME ..."
           mkdir -p dist # Create dist directory if it doesn't exist
-          # Assumes main package is in ./cmd/recovery and has a main.Version variable
           # Adjust path and ldflags variable name if necessary
           CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X 'main.Version=${{ env.VERSION }}'" -o "dist/${BINARY_NAME}" ./servitor/main.go
           echo "BINARY_PATH=dist/${BINARY_NAME}" >> $GITHUB_ENV # Pass path to next step
@@ -145,7 +144,7 @@ jobs:
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: recovery-${{ matrix.goos }}-${{ matrix.goarch }}-${{ env.VERSION }} # Unique artifact name per build
+          name: servitor-${{ matrix.goos }}-${{ matrix.goarch }}-${{ env.VERSION }} # Unique artifact name per build
           path: |
             ${{ env.BINARY_PATH }}
             ${{ env.CHECKSUM_PATH }} # Also include checksum in the workflow artifact
