@@ -121,7 +121,7 @@ jobs:
           mkdir -p dist # Create dist directory if it doesn't exist
           # Assumes main package is in ./cmd/recovery and has a main.Version variable
           # Adjust path and ldflags variable name if necessary
-          CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X 'main.Version=${{ env.VERSION }}'" -o "dist/${BINARY_NAME}" ./main.go
+          CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X 'main.Version=${{ env.VERSION }}'" -o "dist/${BINARY_NAME}" ./servitor/main.go
           echo "BINARY_PATH=dist/${BINARY_NAME}" >> $GITHUB_ENV # Pass path to next step
           echo "BINARY_NAME=${BINARY_NAME}" >> $GITHUB_ENV # Pass name to next step
 
