@@ -2,9 +2,10 @@ package api
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
 	"net"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Server struct {
@@ -23,15 +24,17 @@ func NewServer(handler http.Handler) *Server {
 func (s *Server) Start(listeners ...net.Listener) {
 	for _, listener := range listeners {
 		go func(l net.Listener) {
-			if err := s.s.Serve(l); err != nil {
+			if err := s.s.Serve(l); err != nil && err != http.ErrServerClosed {
 				log.WithError(err).Error("error serving http")
 			}
 		}(listener)
 	}
 }
 
-func (s *Server) Shutdown(ctx context.Context) {
+func (s *Server) Shutdown(ctx context.Context) error {
 	if err := s.s.Shutdown(ctx); err != nil {
 		log.WithError(err).Error("error closing http server")
+		return err
 	}
+	return nil
 }
