@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -e
+set -u
+set -o pipefail
+
+CLOUDSIGN_VERSION="1.9.0"
+TACOS_VERSION="v1.0.0"
+SERVITOR_VERSION="v1.1.0"
+SERVITOR_LOG_FILE="/var/log/servitor.log"
