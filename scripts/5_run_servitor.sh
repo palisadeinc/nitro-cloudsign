@@ -31,11 +31,13 @@ if [ -f "${CONFIG_FILE}" ]; then
     echo "  PAIRING_KEY: ${PAIRING_KEY:-<not set>}"
     echo "  DB_DATA_SOURCE: ${DB_DATA_SOURCE:-<not set>}"
     echo "  TSM_DB_DATA_SOURCE: ${TSM_DB_DATA_SOURCE:-<not set>}"
+    echo "  SIGN_MODE_ACTIVE: ${SIGN_MODE_ACTIVE:-<not set>}"
 else
     echo "No existing configuration found. Please enter the required information:"
     PAIRING_KEY=""
     DB_DATA_SOURCE=""
     TSM_DB_DATA_SOURCE=""
+    SIGN_MODE_ACTIVE="true"
 fi
 
 TEMP_INPUT=""
@@ -57,6 +59,12 @@ if [ -n "${TEMP_INPUT}" ]; then
     TSM_DB_DATA_SOURCE="${TEMP_INPUT}"
 fi
 
+TEMP_INPUT=""
+read -p "Sign Mode Active (true/false) [${SIGN_MODE_ACTIVE:-<not set>}]: " TEMP_INPUT
+if [ -n "${TEMP_INPUT}" ]; then
+    SIGN_MODE_ACTIVE="${TEMP_INPUT}"
+fi
+
 # Write configuration to a file for future reference
 CONFIG_FILE="servitor_config.env"
 echo "Writing configuration to ${CONFIG_FILE}"
@@ -64,6 +72,7 @@ cat > ${CONFIG_FILE} << EOF
 PAIRING_KEY=${PAIRING_KEY}
 DB_DATA_SOURCE=${DB_DATA_SOURCE}
 TSM_DB_DATA_SOURCE=${TSM_DB_DATA_SOURCE}
+SIGN_MODE_ACTIVE=${SIGN_MODE_ACTIVE}
 EOF
 chmod 600 ${CONFIG_FILE}
 echo "Configuration saved to ${CONFIG_FILE}"
@@ -71,6 +80,6 @@ echo "Configuration saved to ${CONFIG_FILE}"
 
 
 echo "Starting servitor... Log file: ${SERVITOR_LOG_FILE}"
-PAIRING_KEY=${PAIRING_KEY} DB_DATA_SOURCE=${DB_DATA_SOURCE} TSM_DB_DATA_SOURCE=${TSM_DB_DATA_SOURCE} servitor > ${SERVITOR_LOG_FILE}
+PAIRING_KEY=${PAIRING_KEY} DB_DATA_SOURCE=${DB_DATA_SOURCE} TSM_DB_DATA_SOURCE=${TSM_DB_DATA_SOURCE} SIGN_MODE_ACTIVE=${SIGN_MODE_ACTIVE} servitor > ${SERVITOR_LOG_FILE}
 
 echo "Servitor stopped."
