@@ -26,8 +26,6 @@ Setup
 The proxy used is tools/service/tacos.service. The linux/amd64 binary is embedded as tools/tacos.
 Servitor is a golang binary in servitor/ directory.
 
-
-
 # EC2 Setup
 
 Use m5.xlarge EC2 Instance with Amazon Linux 2023 AMI.

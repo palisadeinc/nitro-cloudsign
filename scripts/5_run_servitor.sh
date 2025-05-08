@@ -48,13 +48,13 @@ if [ -n "${TEMP_INPUT}" ]; then
 fi
 
 TEMP_INPUT=""
-read -p "DB Data Source (eg postgresql://user:password@host:port/db?sslmode=require) [${DB_DATA_SOURCE:-<not set>}]: " TEMP_INPUT
+read -p "DB Data Source (eg postgres://user:password@host:port/db?sslmode=require) [${DB_DATA_SOURCE:-<not set>}]: " TEMP_INPUT
 if [ -n "${TEMP_INPUT}" ]; then
     DB_DATA_SOURCE="${TEMP_INPUT}"
 fi
 
 TEMP_INPUT=""
-read -p "TSM DB Data Source (eg postgresql://user:password@host:port/db?sslmode=require) [${TSM_DB_DATA_SOURCE:-<not set>}]: " TEMP_INPUT
+read -p "TSM DB Data Source (eg postgres://user:password@host:port/db?sslmode=require) [${TSM_DB_DATA_SOURCE:-<not set>}]: " TEMP_INPUT
 if [ -n "${TEMP_INPUT}" ]; then
     TSM_DB_DATA_SOURCE="${TEMP_INPUT}"
 fi
