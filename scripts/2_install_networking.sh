@@ -6,7 +6,7 @@ set -o pipefail
 
 source ./variables.sh
 
-yum install -y socat
+sudo yum install -y socat
 
 # Check if socat is installed and get its path
 SOCAT_PATH=$(command -v socat)
@@ -15,7 +15,7 @@ if [ -z "$SOCAT_PATH" ]; then
   exit 1
 fi
 
-ln -s "$SOCAT_PATH" /usr/local/bin/socat # this is required for the service to start
+sudo ln -s "$SOCAT_PATH" /usr/local/bin/socat # this is required for the service to start
 
 wget -O tacos https://github.com/palisadeinc/nitro-cloudsign/raw/refs/tags/${TACOS_VERSION}/tools/tacos
 sudo cp tacos /usr/bin/tacos

@@ -88,9 +88,17 @@ func buildConfig() (map[string]string, error) {
 	if !present {
 		return nil, fmt.Errorf("TSM_DB_DATA_SOURCE is required")
 	}
+
 	config["TSM_DB_DATA_SOURCE"] = tsmDbDataSource
 	config["LOG_LEVEL"], _ = os.LookupEnv("LOG_LEVEL") // LOG_LEVEL is optional
 	config["DB_DRIVER"] = "postgres"
+
+	signModeActive, ok := os.LookupEnv("SIGN_MODE_ACTIVE")
+	if !ok {
+		// default to true if not set
+		signModeActive = "true"
+	}
+	config["SIGN_MODE_ACTIVE"] = signModeActive
 
 	return config, nil
 }

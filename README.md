@@ -47,12 +47,11 @@ sudo usermod -aG ne ssm-user
 newgrp ne
 ```
 
-Ensure Nitro allocator `/etc/nitro_enclaves/allocator.yaml` has allocated at least 2G memory and 2 CPU Cores.
+Ensure Nitro allocator `/etc/nitro_enclaves/allocator.yaml` has allocated at least 1G memory and 2 CPU Cores. Make sure you restart the nitro-enclaves-allocator service if you made any modifications in this file.
 
 Ensure Nitro version is 1.4+.
 ```shell
 nitro-cli --version  # Should show v1.3+
-lsmod | grep nitro_enclaves  # Verify kernel module
 ```
 
 Start nitro allocator services:
