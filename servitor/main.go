@@ -78,6 +78,12 @@ func buildConfig() (map[string]string, error) {
 	}
 	config["PAIRING_KEY"] = pairingKey
 
+	dbEncryptionKeyRef, present := os.LookupEnv("DB_ENCRYPTION_KEY_REF")
+	if !present {
+		return nil, fmt.Errorf("DB_ENCRYPTION_KEY_REF is required")
+	}
+	config["DB_ENCRYPTION_KEY_REF"] = dbEncryptionKeyRef
+
 	dbDataSource, present := os.LookupEnv("DB_DATA_SOURCE")
 	if !present {
 		return nil, fmt.Errorf("DB_DATA_SOURCE is required")

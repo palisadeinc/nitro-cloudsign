@@ -25,14 +25,16 @@ func TestBuildConfig(t *testing.T) {
 				t.Setenv("DB_DATA_SOURCE", "test_db_source")
 				t.Setenv("TSM_DB_DATA_SOURCE", "test_tsm_db_source")
 				t.Setenv("LOG_LEVEL", "debug")
+				t.Setenv("DB_ENCRYPTION_KEY_REF", "test_db_encryption_key_ref")
 			},
 			want: map[string]string{
-				"PAIRING_KEY":        "test_pairing_key",
-				"DB_DATA_SOURCE":     "test_db_source",
-				"TSM_DB_DATA_SOURCE": "test_tsm_db_source",
-				"LOG_LEVEL":          "debug",
-				"DB_DRIVER":          "postgres",
-				"SIGN_MODE_ACTIVE":   "true",
+				"PAIRING_KEY":           "test_pairing_key",
+				"DB_DATA_SOURCE":        "test_db_source",
+				"TSM_DB_DATA_SOURCE":    "test_tsm_db_source",
+				"LOG_LEVEL":             "debug",
+				"DB_DRIVER":             "postgres",
+				"SIGN_MODE_ACTIVE":      "true",
+				"DB_ENCRYPTION_KEY_REF": "test_db_encryption_key_ref",
 			},
 			wantErr: false,
 		},
@@ -42,14 +44,16 @@ func TestBuildConfig(t *testing.T) {
 				t.Setenv("PAIRING_KEY", "test_pairing_key")
 				t.Setenv("DB_DATA_SOURCE", "test_db_source")
 				t.Setenv("TSM_DB_DATA_SOURCE", "test_tsm_db_source")
+				t.Setenv("DB_ENCRYPTION_KEY_REF", "test_db_encryption_key_ref")
 			},
 			want: map[string]string{
-				"PAIRING_KEY":        "test_pairing_key",
-				"DB_DATA_SOURCE":     "test_db_source",
-				"TSM_DB_DATA_SOURCE": "test_tsm_db_source",
-				"LOG_LEVEL":          "",
-				"DB_DRIVER":          "postgres",
-				"SIGN_MODE_ACTIVE":   "true",
+				"PAIRING_KEY":           "test_pairing_key",
+				"DB_DATA_SOURCE":        "test_db_source",
+				"TSM_DB_DATA_SOURCE":    "test_tsm_db_source",
+				"LOG_LEVEL":             "",
+				"DB_DRIVER":             "postgres",
+				"SIGN_MODE_ACTIVE":      "true",
+				"DB_ENCRYPTION_KEY_REF": "test_db_encryption_key_ref",
 			},
 			wantErr: false,
 		},
@@ -58,6 +62,7 @@ func TestBuildConfig(t *testing.T) {
 			setupEnv: func(t *testing.T) {
 				t.Setenv("DB_DATA_SOURCE", "test_db_source")
 				t.Setenv("TSM_DB_DATA_SOURCE", "test_tsm_db_source")
+				t.Setenv("DB_ENCRYPTION_KEY_REF", "test_db_encryption_key_ref")
 			},
 			want:        nil,
 			wantErr:     true,
@@ -68,6 +73,7 @@ func TestBuildConfig(t *testing.T) {
 			setupEnv: func(t *testing.T) {
 				t.Setenv("PAIRING_KEY", "test_pairing_key")
 				t.Setenv("TSM_DB_DATA_SOURCE", "test_tsm_db_source")
+				t.Setenv("DB_ENCRYPTION_KEY_REF", "test_db_encryption_key_ref")
 			},
 			want:        nil,
 			wantErr:     true,
@@ -78,10 +84,22 @@ func TestBuildConfig(t *testing.T) {
 			setupEnv: func(t *testing.T) {
 				t.Setenv("PAIRING_KEY", "test_pairing_key")
 				t.Setenv("DB_DATA_SOURCE", "test_db_source")
+				t.Setenv("DB_ENCRYPTION_KEY_REF", "test_db_encryption_key_ref")
 			},
 			want:        nil,
 			wantErr:     true,
 			expectedErr: "TSM_DB_DATA_SOURCE is required",
+		},
+		{
+			name: "error - DB_ENCRYPTION_KEY_REF missing",
+			setupEnv: func(t *testing.T) {
+				t.Setenv("PAIRING_KEY", "test_pairing_key")
+				t.Setenv("DB_DATA_SOURCE", "test_db_source")
+				t.Setenv("TSM_DB_DATA_SOURCE", "test_tsm_db_source")
+			},
+			want:        nil,
+			wantErr:     true,
+			expectedErr: "DB_ENCRYPTION_KEY_REF is required",
 		},
 	}
 
@@ -114,7 +132,7 @@ func TestRun_SuccessfulStartupAndShutdown(t *testing.T) {
 	t.Setenv("PAIRING_KEY", "test_pk_run_success")
 	t.Setenv("DB_DATA_SOURCE", "test_db_run_success")
 	t.Setenv("TSM_DB_DATA_SOURCE", "test_tsm_run_success")
-
+	t.Setenv("DB_ENCRYPTION_KEY_REF", "test_db_encryption_key_ref_run_success")
 	config, err := buildConfig()
 	if err != nil {
 		t.Fatalf("buildConfig failed: %v", err)
@@ -146,7 +164,7 @@ func TestRun_ListenError(t *testing.T) {
 	t.Setenv("PAIRING_KEY", "test_pk_listen_err")
 	t.Setenv("DB_DATA_SOURCE", "test_db_listen_err")
 	t.Setenv("TSM_DB_DATA_SOURCE", "test_tsm_listen_err")
-
+	t.Setenv("DB_ENCRYPTION_KEY_REF", "test_db_encryption_key_ref_listen_err")
 	config, err := buildConfig()
 	if err != nil {
 		t.Fatalf("buildConfig failed: %v", err)
